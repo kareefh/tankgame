@@ -1,0 +1,175 @@
+float gravity; //value for making ball go down
+float launchspeedtext; //text showing launch speed
+int[] bulletcolours = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}; //array for the bullet's colours. 10 colours at random values that cycle
+
+//Tank object
+class Tank
+{
+  float health; //hit points for the tank
+  float x; // x position of the tank
+  float y; // y position of the tank
+  float ay; //modifier for adding and subtracting speed of the bullet
+  float aimcoefficient; //for switching the direction of bullet
+  float[] colour = new float[3]; // array for colour of tank
+  Tank(int a, int b, float c, float d, float e, float f, float g) //defining class with the variables
+  {
+    this.x = a;
+    this.y = b;
+    this.colour[0] = c;
+    this.colour[1] = d;
+    this.colour[2] = e;
+    this.health = f;
+    this.aimcoefficient = g;
+  }
+
+  void render() //function for making the tank appear on screen
+  {
+    
+    fill(colour[0], colour[1], colour[2]); //colour of tank
+    rect(this.x, this.y, 30, 20); //shape of tank
+  }
+}
+//Bullet object
+class Bullet {
+  float x, y, sx, sy; //x position, y position, x speed, y speed
+  float[] colours = new float[3]; //colours of the bullet
+  Bullet(float a, float b, float c, float d, int e, int f, int g) //defining class with variables
+  {
+    this.x = a;
+    this.y = b;
+    this.sx = c;
+    this.sy = d;
+    this.colours[0] = e;
+    this.colours[1] = f;
+    this.colours[2] = g;
+  }
+  void shoot() //function for shooting the bullet
+  {
+    this.x += this.sx;
+    this.y += this.sy;
+    this.sy += gravity;
+
+    if (this.y > height) { //if bullet is at the bottom of the screen, it stops
+      this.sx = 0;
+      this.sy = 0;
+    }
+    fill(this.colours[0], this.colours[1], this.colours[2]); //filling the bullet's colour with array values
+    ellipse(this.x, this.y, 10, 10); //shape of bullet
+  }
+}
+
+Tank player; //putting player 1 on the screen
+Tank player2; //putting player 2 on the screen
+
+Bullet bullet; //putting the first bullet on the screen
+Bullet bullet2; //putting the second bullet on the screen
+
+void setup()
+{
+  size(1200, 800); //screen size
+  noStroke();
+  gravity = 0.5; //gravity value (acceleration)
+  player = new Tank(200, height - 20, random(1, 255), random(1, 255), random(1, 255), 5, 1); //defining values for player 1, bullet goes in front of tank, colour is random
+  player2 = new Tank(600, height - 20, random(1, 255), random(1, 255), random(1, 255), 5, -1); //defining values for player 2, bullet goes toward other player, colour is random
+  bullet = new Bullet(width + 100, height + 100, 0, 0, 0, 0, 0); //bullets are out of sight for now, keeping values at zero until changed
+  bullet2 = new Bullet(width + 100, height + 100, 0, 0, 0, 0, 0);
+}
+void draw() //calls every frame
+{
+  launchspeedtext = 11; //this is equal to sy, changes every time player changes sy
+  background(137, 207, 240); //resets screen every update
+
+  stroke(0); //colour of lines
+
+  bullet.shoot(); //calling shoot function, renders bullet
+  bullet2.shoot();//calling shoot function, renders other bullet
+
+  player.render(); //draws the player
+  player2.render(); //draws the other player
+
+  if (bullet.x >= player2.x && bullet.x <= player2.x + 30 && bullet.y >= player2.y && bullet.y <= player2.y + 20) { //hitboxes for player 2
+    player2.health += -1;
+    if (player2.health == 0) {
+      player2.x = width + 1000;
+      player2.y = height + 1000;
+      println("player 2 dead!");
+    }
+  } else if (bullet2.x >= player.x && bullet2.x <= player.x + 30 && bullet2.y >= player.y && bullet2.y <= player.y + 20) { //hitboxes for player 1 
+    player.health += -1;
+    if (player.health == 0) {
+      player.x = width + 1000;
+      player.y = height + 1000;
+      println("player 1 dead!");
+    }
+  }
+
+  for (int i : bulletcolours) { //for loop for random bullet colours, makes it flash in many colours
+    bullet.colours[0] = random(1, 230) + i;
+    bullet.colours[1] = random(1, 230) + i;
+    bullet.colours[2] = random(1, 230) + i;
+
+    bullet2.colours[0] = random(1, 230) + i;
+    bullet2.colours[1] = random(1, 230) + i;
+    bullet2.colours[2] = random(1, 230) + i;
+  }
+
+  if (player.health == 0) { //this shows text for the tanks dying
+    textSize(50);
+    fill(player2.colour[0], player2.colour[1], player2.colour[2]);
+    text("GAME OVER! Player 2 Win", 300, 400);
+  } else if (player2.health == 0) {
+    textSize(50);
+    fill(player.colour[0], player.colour[1], player.colour[2]);
+    text("GAME OVER! Player 1 Win", 300, 400);
+  }
+
+  textSize(32); //showing launchspeed and health
+  fill(player.colour[0], player.colour[1], player.colour[2]);
+  text("Player 1 launchspeed: " + (launchspeedtext + (player.ay * -1)), 10, 90); 
+  text("Player 1 health: " + player.health, 10, 30);
+  fill(player2.colour[0], player2.colour[1], player2.colour[2]);
+  text("Player 2 launchspeed: " + (launchspeedtext + (player2.ay * -1)), 600, 90); 
+  text("Player 2 health: " + player2.health, 600, 30);
+
+  textSize(20); //showing framerate
+  fill(0);
+  text("FPS: " + floor(frameRate), 1100, 30);
+}
+
+void keyPressed() { //what happens when you press a key
+  if (keyPressed) { 
+    if (key == 'd') { //controls for player 2, WASD
+      player2.x += 10;
+    } else if (key == 'a') {
+      player2.x += -10;
+    } else if (key == 'w') {
+      player2.ay += -1;
+    } else if (key == 's') {
+      player2.ay += 1;
+    }
+
+
+    if (keyCode == RIGHT) { //controls for player 1, arrow keys
+      player.x += 10;
+    } else if (keyCode == LEFT) {
+      player.x += -10;
+    }
+    if (keyCode == UP) {
+      player.ay += -1;
+    } else if (keyCode == DOWN) {
+      player.ay += 1;
+    }
+
+    if (key == ' ') { //press SPACE to shoot with player 1
+      bullet.x = player.x; //moving tank and bullet
+      bullet.y = height; //keeps the bullet on the ground
+      bullet.sx = (3 * player.aimcoefficient); // constant x speed times direction
+      bullet.sy = -11 + player.ay; //initial y speed, this makes it go up at first, can be changed by pressing UP
+    } else if (keyCode == ENTER) { //press ENTER to shoot with player 2
+      bullet2.x = player2.x; //moving tank and bullet
+      bullet2.y = height; //keeps the bullet starting at the ground
+      bullet2.sx = (3 * player2.aimcoefficient); //constant x speed times direction
+      bullet2.sy = -11 + player2.ay; //initial y speed, can be changed by pressing W
+    }
+  }
+}
